@@ -35,6 +35,6 @@ def get_format_timezone(msec=False):
 
 
 if __name__ == '__main__':
-    print format_time_to_str(format_str_to_time('1990/08/08', '%Y-%m-%d', '%Y~%m~%d', '%Y/%m/%d', '%Y:%m:%d'),
-                             '%Y~%m~%d')
+    print(format_time_to_str(format_str_to_time('1990/08/08', '%Y-%m-%d', '%Y~%m~%d', '%Y/%m/%d', '%Y:%m:%d'),
+                             '%Y~%m~%d'))
     # print get_format_timezone(msec=True)

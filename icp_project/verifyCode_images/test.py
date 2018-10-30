@@ -185,7 +185,7 @@ if __name__ == '__main__':
     # print(browser.page_source)
     # path = r'GJX744.jpeg'
     # img_dispose(path)
-    for item in excel_to_dict(r'E:\workplace\program\icp_project_temp\icp_project\ICP公司列表-1018.xls'):
+    for item in excel_to_dict(r'..\ICP公司列表-1018.xls'):
         print(item)
         dict_date = get_page(item.get('COMPANY_NM'))
         conn.save(dict_date, 'icp备案')
