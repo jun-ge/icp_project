@@ -281,4 +281,4 @@ class ImageDispose:
 
 
 if __name__ == '__main__':
-    pass
+    image = Image.open('ddd.png')

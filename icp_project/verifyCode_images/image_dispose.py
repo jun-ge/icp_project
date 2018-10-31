@@ -45,7 +45,7 @@ class ImageDispose:
         if file_path:
             temp_path = file_path.replace('\\', '\\temp_')
         else:
-            temp_path = 'temp_' + str(int(time.time())) + str(random.randint(100, 999)) + '.jpg'
+            temp_path = 'new_' + str(int(time.time())) + str(random.randint(100, 999)) + '.jpg'
         im.save(temp_path)
         self._im = cv2.cvtColor(cv2.imread(temp_path), cv2.COLOR_BGR2GRAY)
         # os.remove(temp_path)

@@ -17,7 +17,7 @@ class MongoConnection(object):
                 if kwargs.get('url', None):
                     return MongoClient(kwargs.get('url'))[kwargs.get('db')]
                 else:
-                    return MongoClient('mongodb://127.0.0.1:27127/')['test']
+                    return MongoClient('mongodb://localhost:27017/')['test']
             except errors.PyMongoError as e:
                 self.logger.error("mongodb_conn链接失败,reconnect,error_msg:{}".format(e))
                 time.sleep(3)

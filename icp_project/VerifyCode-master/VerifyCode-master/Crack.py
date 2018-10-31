@@ -8,7 +8,7 @@ from PIL import ImageFilter
 import re
 
 Cutting = "./Cutting/"
-Train = './Record/'
+TRAIN = './Record/'
 
 
 # letters = []
@@ -18,14 +18,14 @@ class Crack(object):
 
     def Cutting(self, img_name):
         # global letters
+        # 初始化切割字符列表
         letters = []
+
         img = Image.open(img_name)
         his = img.histogram()
-
         values = {}
         for i in range(0, len(his)):
             values[i] = his[i]
-
         temp = sorted(values.items(), key=lambda x: x[1], reverse=True)
 
         inletter = False
@@ -34,6 +34,7 @@ class Crack(object):
         end = 0
         img.show()
 
+        # 从上至下，从左往右遍历像素点， 确定单个字符的切割起始位置
         for x in range(img.size[0]):
             for y in range(img.size[1]):
                 pix = img.getpixel((x, y))
@@ -49,6 +50,7 @@ class Crack(object):
 
             inletter = False
 
+        # 根据各个点位的起始位置截图（切割）
         count = 0
         for letter in letters:
             img2 = img.crop((letter[0], 0, letter[1], img.size[1]))
@@ -72,6 +74,11 @@ class Crack(object):
         return topvalue / (self.magnitude(concordance1) * self.magnitude(concordance2))
 
     def buildvector(self, im):
+        """
+        创建矢量
+        :param im: Image.Open()对象
+        :return:
+        """
         d1 = {}
         count = 0
         for i in im.getdata():
@@ -80,6 +87,10 @@ class Crack(object):
         return d1
 
     def LoadTrain(self):
+        '''
+    加载训练
+        :return:
+        '''
         import os
         imageset = []
         iconset = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
@@ -87,16 +98,18 @@ class Crack(object):
 
         imageset = []
         for letter in iconset:
-            for img in os.listdir(Train + '%s/' % (letter)):
+            # 获取训练集里面的图片名称
+            for img in os.listdir(TRAIN + '%s/' % (letter)):
                 temp = []
                 if img != "Thumbs.db" and img != ".DS_Store":
-                    temp.append(self.buildvector(Image.open(Train + "/%s/%s" % (letter, img))))
+                    # 处理图片   结果以{'a':[]}的形势存入imageset里面并返回
+                    temp.append(self.buildvector(Image.open(TRAIN + "/%s/%s" % (letter, img))))
                 imageset.append({letter: temp})
         return imageset
 
     def CrackImg(self, img_name, imageset, letters):
         # global letters
-        img = Image.open(img_name);
+        img = Image.open(img_name)
         coutn = 0
         data = []
         for letter in letters:
@@ -116,4 +129,4 @@ class Crack(object):
 
 if __name__ == "__main__":
     C = Crack()
-    C.Cutting("./Modif/4.png")
+    C.Cutting("./Modif/6.png")

@@ -1,3 +1,4 @@
+import random
 import time
 from io import BytesIO
 
@@ -13,6 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from icp_project.Tools.common_tools.excel_tools import excel_to_dict
 from icp_project.Tools.db_tools.mongo_tools import MongoClientTools
 from icp_project.verifyCode_images.image_dispose import ImageDispose
+from icp_project.verifyCode_images.test_bdApi import get_verify_code
 
 data = {
     'company_name': '',
@@ -44,9 +46,12 @@ def get_new_verifycode():
     # 截图,获取验证码图片
     screenshot = Image.open(BytesIO(browser.get_screenshot_as_png()))
     verify_code_img = screenshot.crop((left, top, right, bottom))
-
-    verify_code = ImageDispose(verify_code_img).dispose()
-    while not verify_code:
+    image_path = 'new_' + str(int(time.time())) + str(random.randint(100, 999)) + '.png'
+    verify_code_img.save(image_path)
+    time.sleep(0.5)
+    verify_code = get_verify_code(image_path)
+    #verify_code = ImageDispose(verify_code_img).dispose()
+    while (not verify_code) or (verify_code and len(verify_code) != 6):
         verify_code = get_new_verifycode()
     return verify_code
 
@@ -89,24 +94,28 @@ def get_page(company_name):
     input_verify_code = wait.until(
         EC.presence_of_element_located((By.CSS_SELECTOR, '#textfield7'))
     )
-    input_verify_code.clear()
-    verify_code = ImageDispose(verify_code_img).dispose()
+
+    image_path = 'new_' + str(int(time.time())) + str(random.randint(100, 999)) + '.png'
+    verify_code_img.save(image_path)
+    verify_code = get_verify_code(image_path)
     while not verify_code:
         verify_code = get_new_verifycode()
+    time.sleep(1)
+    input_verify_code.clear()
     input_verify_code.send_keys(verify_code)
-    time.sleep(0.1)
+    time.sleep(0.5)
     check_note = wait.until(
         EC.presence_of_element_located((By.CSS_SELECTOR, '#checkNote'))
     )
     print(check_note.text)
-    while '错误' in check_note.text or not check_note.text:
+    while '错误' in check_note.text:
+        time.sleep(1)
+        input_verify_code.clear()
         count += 1
         verify_code_img_ele.click()
         verify_code = get_new_verifycode()
         input_verify_code.click()
-        input_verify_code.clear()
         input_verify_code.send_keys(verify_code)
-        time.sleep(0.5)
         check_note = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#checkNote'))
         )
@@ -187,7 +196,11 @@ if __name__ == '__main__':
     # img_dispose(path)
     for item in excel_to_dict(r'..\ICP公司列表-1018.xls'):
         print(item)
-        dict_date = get_page(item.get('COMPANY_NM'))
-        conn.save(dict_date, 'icp备案')
+        try:
+            dict_date = get_page(item.get('COMPANY_NM'))
+            conn.save(dict_date, 'icp备案')
+        except Exception as  e:
+            print(e)
+
     # res = requests.get('http://xueqiu.com/', headers=headers)
     # print(res.text)
