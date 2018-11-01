@@ -175,6 +175,69 @@ class Img(object):
         # 切割文件
         self.img_cutting(img2_path)
 
+    def get_crop_site(self, img):
+        """
+        获取截图所需要的四个点
+        :param img_name:
+        :return:
+        """
+        letters = []
+        inletter_w = False
+        inletter_h = False
+        foundletter_w = False
+        foundletter_h = False
+        start = [0, 0]
+        end = [0, 0]
+
+        for x in range(img.size[0]):
+            for y in range(img.size[1]):
+                pix = img.getpixel((x, y))
+                if pix != 255:
+                    inletter_w = True
+            if foundletter_w == False and inletter_w == True:
+                foundletter_w = True
+                start[0] = x
+            if foundletter_w == True and inletter_w == False:
+                foundletter_w = False
+                end[0] = x
+                # 如果宽度太小，则跳过
+                if end[0] - start[0] < 10:
+                    continue
+                # 当找到最小宽度后，再找最小高度
+                for h in range(img.size[1]):
+                    for w in range(start[0], end[0] + 1):
+                        pix = img.getpixel((w, h))
+                        if pix != 255:
+                            inletter_h = True
+
+                        if foundletter_h == False and inletter_h == True:
+                            foundletter_h = True
+                            start[1] = h
+                        if foundletter_h == True and inletter_h == False:
+                            foundletter_h = False
+                            end[1] = h
+                            # 如果高度小于20 则跳过
+                            if end[1] - start[1] < 20:
+                                continue
+                            # 如果宽度太宽，> 50 或者 > 90
+                            if end[0] - start[0] > 50:
+                                # 分2块切割
+                                width = (end[0] - start[0]) // 2
+                                letters.extend([(start, [start[0] - width, end[1]]),
+                                                ([start[0] - width, start[1]], end)])
+                            elif end[0] - start[0] > 90:
+                                # 分3块切割
+                                width = (end[0] - start[0]) // 3
+                                letters.extend([(start, [start[0] + width, end[1]]),
+                                                ([start[0] + width, start[1]], [start[0] + 2 * width, end[1]]),
+                                                ([start[0] + 2 * width, start[1]], end)])
+                            else:
+                                letters.append((start, end))
+                    inletter_h = False
+            inletter_w = False
+
+        return letters
+
     def img_cutting(self, img_name):
         global VAL_IMG
         if VAL_IMG <= 1:
@@ -195,39 +258,40 @@ class Img(object):
         # 打开 灰度，和二值化处理的图片
         img = Image.open(img_name)
 
-        # 创建灰度直方图
-        his = img.histogram()
-        values = {}
-        for i in range(0, len(his)):
-            values[i] = his[i]
-        temp = sorted(values.items(), key=lambda x: x[1], reverse=True)
+        # # 创建灰度直方图
+        # his = img.histogram()
+        # values = {}
+        # for i in range(0, len(his)):
+        #     values[i] = his[i]
+        # temp = sorted(values.items(), key=lambda x: x[1], reverse=True)
 
         # 获取每个点的像素值，至上而下，从左往右，最小宽度切割，
-        for x in range(img.size[0]):
-            for y in range(img.size[1]):
-                pix = img.getpixel((x, y))
-                # 找到第一个像素值不为255的点，
-                if pix != 255:
-                    inletter = True
-                    break
-            if foundletter == False and inletter == True:
-                foundletter = True
-                # 保存起始位置
-                start = x
-            # 如果没有很黑的，保存结束点
-            if foundletter == True and inletter == False:
-                foundletter = False
-                end = x
-                # 记录，图片某一个字母左右切割的范围
-                letters.append((start, end))
-
-            inletter = False
+        # for x in range(img.size[0]):
+        #     for y in range(img.size[1]):
+        #         pix = img.getpixel((x, y))
+        #         # 找到第一个像素值不为255的点，
+        #         if pix != 255:
+        #             inletter = True
+        #             break
+        #     if foundletter == False and inletter == True:
+        #         foundletter = True
+        #         # 保存起始位置
+        #         start = x
+        #     # 如果没有很黑的，保存结束点
+        #     if foundletter == True and inletter == False:
+        #         foundletter = False
+        #         end = x
+        #         # 记录，图片某一个字母左右切割的范围
+        #         letters.append((start, end))
+        #
+        #     inletter = False
+        letters = self.get_crop_site(img)
 
         for letter in letters:
             ini_time = int(time.time())
             code_img_name = random.randint(0, ini_time)
             # 截图，（起始点的横坐标，起始点的纵坐标，宽度，高度）
-            img2 = img.crop((letter[0], 0, letter[1], img.size[1]))
+            img2 = img.crop((letter[0][0], letter[0][1], letter[1][0], letter[1][1]))
             save_path = CUTTING + str(code_img_name) + '.png'
             # 将截图保存下来
             img2.save(save_path)
